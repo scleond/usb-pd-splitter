@@ -1,0 +1,26 @@
+# KiCAD generated files
+*.bak
+*.tmp
+*.log
+*.net
+*.lck
+*.kicad_prl
+*.kicad_pro-bak
+*.kicad_prl-bak
+*.kicad_pcb-bak
+*.kicad_pcb-bak.*
+*.kicad_sch-bak
+*.kicad_sch-bak.*
+*.kicad_proj
+*.pro.user
+*-backups/
+fp-info-cache
+
+# Locally generated fabrication/export output
+/outputs/gerbers/
+/outputs/drill/
+/outputs/plots/
+
+# OS files
+.DS_Store
+Thumbs.db
