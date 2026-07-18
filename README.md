@@ -1,22 +1,29 @@
 # USB-PD Splitter
 
-A simple KiCad project scaffold for a USB-C splitter with separate power and data inputs feeding a single output connector.
-
-This repository is currently a documentation and project-organization scaffold. The schematic and PCB files are intentionally minimal and still need to be populated in KiCad.
+A KiCad hardware design for a passive USB-C power and data splitter. The design combines power from a dedicated USB-C input with USB 2.0 data from a separate USB-C input and routes both to a single USB-C device output.
 
 ## Design intent
-- 3x USB-C connectors
-  - `PWR_IN`: USB-C power input
-  - provides `VBUS`, `GND`, and `CC1`/`CC2` to `OUT`
-  - all data pins are DNP
-- `DATA_IN`: USB-C host data input
-  - provides `D+`, `D-`, `GND`, and CC signaling for the host
-  - `VBUS` is isolated from `OUT`
-- `OUT`: powered USB-C device output
-  - receives `VBUS`, `GND`, and `CC1`/`CC2` from `PWR_IN`
-  - receives `D+`, `D-`, and `GND` from `DATA_IN`
-- `DATA_IN` CC pins will be configured to present host-side signaling on the data path
-- `OUT` is the powered device connection, and the power source negotiates with the device passively through the splitter
+
+The design uses three USB-C connectors:
+
+- `PWR_IN`: dedicated USB-C power source
+  - Supplies `VBUS` and `GND` to `OUT`
+  - Passes `CC1` and `CC2` to `OUT` for source-to-device role signaling
+  - USB data pins are not connected and are marked DNP
+
+- `DATA_IN`: USB-C host/data source
+  - Supplies USB 2.0 `D+`, `D-`, and `GND` to `OUT`
+  - Uses appropriate host/source-side CC pull-ups (`Rp`) for attachment and role detection
+  - Its `VBUS` is isolated from the power path and is not connected to `OUT`
+
+- `OUT`: USB-C powered device connection
+  - Receives `VBUS`, `GND`, and CC signaling from `PWR_IN`
+  - Receives USB 2.0 `D+` and `D-` from `DATA_IN`
+  - Is intended to operate as the sink/device-side connection
+
+This is a passive power-injection topology. It does not contain a USB-PD controller, USB data repeater, or role-switching circuitry. Power negotiation and USB-C attachment behavior depend on the connected source and device and must be validated with the intended hardware.
+
+The design currently targets USB 2.0 data only; USB 3.x, USB4, and alternate-mode signals are not supported.
 
 ## Project structure
 - `usb-pd-splitter.kicad_pro` - KiCad project file
