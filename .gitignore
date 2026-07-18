@@ -20,8 +20,10 @@ fp-info-cache
 /outputs/gerbers/
 /outputs/drill/
 /outputs/plots/
-/outputs
+/outputs*
 
+# Analysis output -- regenerable from source files
+analysis/*
 
 # OS files
 .DS_Store
