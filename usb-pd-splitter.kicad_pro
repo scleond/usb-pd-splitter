@@ -551,6 +551,9 @@
       ],
       "/D-": [
         "USB"
+      ],
+      "VBUS": [
+        "VUSB_28V"
       ]
     },
     "netclass_patterns": [
