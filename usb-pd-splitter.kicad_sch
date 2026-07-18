@@ -1279,6 +1279,26 @@
 		)
 		(uuid "ad7363eb-c7f9-4416-9e11-a4b0459ca6e6")
 	)
+	(text_box "28V/5A\n"
+		(exclude_from_sim no)
+		(at 107.95 45.72 0)
+		(size 15.24 5.08)
+		(margins 0.9525 0.9525 0.9525 0.9525)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(type none)
+		)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "d88f5d64-2e26-4839-adb3-c820b21a09c5")
+	)
 	(text_box "5.1k to GND for normal 5V upstream negotiation. We won't use this connector's VBus, however.\n"
 		(exclude_from_sim no)
 		(at 76.2 146.0647 0)
@@ -1760,6 +1780,41 @@
 		)
 		(property "Component Class" ""
 			(at -1.27 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+			)
+		)
+	)
+	(netclass_flag ""
+		(length 2.54)
+		(shape round)
+		(at 107.95 55.88 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "68d5fd30-337d-4eb5-90ed-55175e07e12c")
+		(property "Netclass" "VUSB_28V"
+			(at 108.6485 53.34 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Component Class" ""
+			(at -26.67 -15.24 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects

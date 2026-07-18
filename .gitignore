@@ -20,6 +20,8 @@ fp-info-cache
 /outputs/gerbers/
 /outputs/drill/
 /outputs/plots/
+/outputs
+
 
 # OS files
 .DS_Store
