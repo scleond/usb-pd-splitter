@@ -1735,6 +1735,76 @@
 		)
 		(uuid "e23a20e7-fede-403a-b5bc-95b288113c7d")
 	)
+	(netclass_flag ""
+		(length 2.54)
+		(shape round)
+		(at 133.35 71.12 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "227be7b1-229a-434f-abdc-2a25c39c87a0")
+		(property "Netclass" "USB"
+			(at 134.0485 68.58 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Component Class" ""
+			(at -1.27 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+			)
+		)
+	)
+	(netclass_flag ""
+		(length 2.54)
+		(shape round)
+		(at 133.35 76.2 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "efeb03e8-298a-419f-bcd2-4287d5e48c00")
+		(property "Netclass" "USB"
+			(at 134.0485 73.66 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Component Class" ""
+			(at -1.27 5.08 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+			)
+		)
+	)
 	(symbol
 		(lib_id "Connector:USB_C_Receptacle_USB2.0_14P")
 		(at 62.23 130.81 0)
@@ -1767,7 +1837,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_USB:USB_C_Receptacle_GCT_USB4110"
+		(property "Footprint" "cl_Connector_USB:USB_C_Receptacle_GCT_USB4110"
 			(at 66.04 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -2201,7 +2271,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Connector_USB:USB_C_Receptacle_GCT_USB4110"
+		(property "Footprint" "cl_Connector_USB:USB_C_Receptacle_GCT_USB4110"
 			(at 209.296 75.438 0)
 			(hide yes)
 			(show_name no)
@@ -2789,7 +2859,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_USB:USB_C_Receptacle_GCT_USB4110"
+		(property "Footprint" "cl_Connector_USB:USB_C_Receptacle_GCT_USB4110"
 			(at 66.04 71.12 0)
 			(hide yes)
 			(show_name no)
