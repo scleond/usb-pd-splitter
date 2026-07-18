@@ -1,5 +1,7 @@
 # USB-PD Splitter
 
+![Isometric raytraced view of the USB-PD Splitter PCB](docs/assets/usb-pd-splitter-isometric.png)
+
 A KiCad hardware design for a passive USB-C power and data splitter. The design combines power from a dedicated USB-C input with USB 2.0 data from a separate USB-C input and routes both to a single USB-C device output.
 
 ## Design intent
@@ -26,15 +28,37 @@ This is a passive power-injection topology. It does not contain a USB-PD control
 The design currently targets USB 2.0 data only; USB 3.x, USB4, and alternate-mode signals are not supported.
 
 ## Project structure
+
 - `usb-pd-splitter.kicad_pro` - KiCad project file
 - `usb-pd-splitter.kicad_sch` - main schematic file
 - `usb-pd-splitter.kicad_pcb` - PCB layout file
+- `usb-pd-splitter.kicad_jobset` - native KiCad validation/export jobset
 - `hardware/symbols/` - custom schematic symbols
 - `hardware/footprints/` - custom footprints
 - `hardware/3d_models/` - 3D model assets
 - `docs/` - design notes and reference documents
-- `bom/` - exported bill-of-materials files
-- `outputs/` - fabrication and review exports; generated subdirectories are ignored
+- `bom/` - reviewed, human-readable BOM snapshots
+- `manufacturing/` - release profiles, notes, and inspection templates
+- `automation/` - cross-platform Python release CLI and tests
+- `outputs/` - disposable KiCad/plugin review exports
+- `dist/` - immutable release packages; generated and ignored
+
+## Manufacturing release
+
+Install [uv](https://docs.astral.sh/uv/), then run from the repository root:
+
+```powershell
+uv run --project automation hwrelease validate
+uv run --project automation hwrelease build
+uv run --project automation hwrelease inspect
+```
+
+After PCB or project-local 3D-model changes, refresh the tracked image with
+`uv run --project automation hwrelease render-docs`; validation rejects stale renders.
+
+During development, `--allow-dirty` permits an explicitly marked dirty-tree build.
+Formal packages require a clean commit, zero ERC/DRC/parity findings, and a matching
+revision/version. See [the release process](docs/manufacturing/release-process.md).
 
 ## Notes
 This design is a passive power/data splitter, not a USB Power Delivery controller. It assumes:
@@ -49,3 +73,6 @@ Because the power and data paths are separated, this is effectively a power inje
 - Treat the KiCad schematic as the source of truth for connectivity.
 - Keep reusable source assets under `hardware/`; keep generated exports under `outputs/`.
 - Record unresolved electrical-role decisions in `docs/` before committing the final schematic.
+- Treat `Manufacturer`, `MPN`, and `LCSC Part #` as required properties for every fitted part.
+- Mark anything intended for hand assembly DNP; JLCPCB places every non-DNP part.
+- Never hand-edit a generated BOM/CPL as the lasting fix; correct KiCad metadata instead.

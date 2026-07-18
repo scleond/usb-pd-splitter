@@ -7,6 +7,13 @@
 		(legacy_teardrops no)
 	)
 	(paper "A4")
+	(title_block
+		(title "USB-PD Splitter")
+		(date "2026-07-18")
+		(rev "A")
+		(comment 1 "Professional fabrication and assembly release")
+		(comment 2 "Hardware version 1.0.0")
+	)
 	(layers
 		(0 "F.Cu" signal)
 		(2 "B.Cu" signal)
@@ -159,7 +166,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.lcsc.com/product-detail/C27834.html"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -193,6 +200,10 @@
 				)
 			)
 		)
+		(property "Manufacturer" "UNI-ROYAL" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "a48c8f83-4578-4bc7-8e14-b8776b1f90f1") (effects (font (size 1.27 1.27))))
+		(property "MPN" "0805W8F5101T5E" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "b9116644-7592-49f4-99b1-1305b7b6196e") (effects (font (size 1.27 1.27))))
+		(property "LCSC Part #" "C27834" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "ca9f51d8-c87b-4b4e-9a8f-6a305fc424aa") (effects (font (size 1.27 1.27))))
+		(property "BOM Comments" "JLCPCB basic part; 5.1 kOhm 1% 125 mW" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "dfb03f2a-8897-4c3e-915a-740d35706a39") (effects (font (size 1.27 1.27))))
 		(property ki_fp_filters "R_*")
 		(path "/8e13d837-efb3-4665-80cf-b9fdd28354d1")
 		(sheetname "/")
@@ -319,7 +330,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.usb.org/sites/default/files/documents/usb_type-c.zip"
+		(property "Datasheet" "https://gct.co/files/drawings/usb4110.pdf"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -345,6 +356,10 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Global Connector Technology" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "1eb6a191-1bc0-4713-a1f1-5db51392f79d") (effects (font (size 1.27 1.27))))
+		(property "MPN" "USB4110-GF-A" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "27fc4be1-f8c0-44d7-955c-7acdf981ae1f") (effects (font (size 1.27 1.27))))
+		(property "LCSC Part #" "C5143397" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "3634aac3-4e47-4cff-9851-af657cc4de29") (effects (font (size 1.27 1.27))))
+		(property "BOM Comments" "JLCPCB extended part; high assembly difficulty; fixture required" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "4311d75a-c518-4634-ad1c-20aa73f3e62b") (effects (font (size 1.27 1.27))))
 		(property ki_fp_filters "USB*C*Receptacle*")
 		(path "/be922ea1-5309-4a4c-ad08-c6bfc646e520")
 		(sheetname "/")
@@ -941,7 +956,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.lcsc.com/product-detail/C27834.html"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -975,6 +990,10 @@
 				)
 			)
 		)
+		(property "Manufacturer" "UNI-ROYAL" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "581f7b8d-f6cb-47f5-8f95-9ca5bacd585e") (effects (font (size 1.27 1.27))))
+		(property "MPN" "0805W8F5101T5E" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "654fa7e4-07db-4d60-81b8-e93e945b629a") (effects (font (size 1.27 1.27))))
+		(property "LCSC Part #" "C27834" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "738cbd88-a040-4e50-97cb-9debd7f1bb53") (effects (font (size 1.27 1.27))))
+		(property "BOM Comments" "JLCPCB basic part; 5.1 kOhm 1% 125 mW" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "8f028a29-705e-42b3-aab5-285f57a48518") (effects (font (size 1.27 1.27))))
 		(property ki_fp_filters "R_*")
 		(path "/13767a0d-4300-447b-a51d-336ea1be879e")
 		(sheetname "/")
@@ -1101,7 +1120,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.usb.org/sites/default/files/documents/usb_type-c.zip"
+		(property "Datasheet" "https://gct.co/files/drawings/usb4110.pdf"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1127,6 +1146,10 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Global Connector Technology" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "904daa7b-bca5-462e-aa53-20be89d4f6b1") (effects (font (size 1.27 1.27))))
+		(property "MPN" "USB4110-GF-A" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "a84758c6-d0f6-439e-ac71-f2642998b870") (effects (font (size 1.27 1.27))))
+		(property "LCSC Part #" "C5143397" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "b1086dbb-0217-4aa1-92d0-46312b4aef50") (effects (font (size 1.27 1.27))))
+		(property "BOM Comments" "JLCPCB extended part; high assembly difficulty; fixture required" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "c79ae370-5b03-4b98-84ce-2c04b6b834c1") (effects (font (size 1.27 1.27))))
 		(property ki_fp_filters "USB*C*Receptacle*")
 		(path "/32ec8982-f06b-4abb-930b-ae60e9bef144")
 		(sheetname "/")
@@ -1725,7 +1748,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.usb.org/sites/default/files/documents/usb_type-c.zip"
+		(property "Datasheet" "https://gct.co/files/drawings/usb4110.pdf"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1751,6 +1774,10 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Global Connector Technology" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "d21468a8-a4a6-4d35-9b9c-e4b34675ad9b") (effects (font (size 1.27 1.27))))
+		(property "MPN" "USB4110-GF-A" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "eac482dc-4242-4698-a405-ccbd0e1464a6") (effects (font (size 1.27 1.27))))
+		(property "LCSC Part #" "C5143397" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "f3ea96bd-92cd-46a6-bcc2-c0e7d2febcb6") (effects (font (size 1.27 1.27))))
+		(property "BOM Comments" "JLCPCB extended part; high assembly difficulty; fixture required" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "0ad73aa4-66c4-4a90-b160-cdf29d8e9a03") (effects (font (size 1.27 1.27))))
 		(property ki_fp_filters "USB*C*Receptacle*")
 		(path "/0094f3c5-f1b6-4a89-b7ec-a7512b0daa35")
 		(sheetname "/")

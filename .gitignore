@@ -17,13 +17,22 @@
 fp-info-cache
 
 # Locally generated fabrication/export output
-/outputs/gerbers/
-/outputs/drill/
-/outputs/plots/
-/outputs*
+/outputs/
+/dist/
+/automation/.venv/
+/automation/.uv-cache/
+/automation/.pytest_cache/
+__pycache__/
+*.pyc
+
+# Downloaded/reproducible supply-chain data
+/datasheets/
+/bom/orders/
 
 # Analysis output -- regenerable from source files
 analysis/*
+!analysis/.gitignore
+!analysis/manifest.json
 
 # OS files
 .DS_Store

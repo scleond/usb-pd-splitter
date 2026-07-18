@@ -1,0 +1,27 @@
+[project]
+slug = "usb-pd-splitter"
+title = "USB-PD Splitter"
+revision = "A"
+version = "1.0.0"
+kicad_major = 10
+
+[fabrication]
+vendor = "JLCPCB"
+layers = 2
+material = "FR-4"
+thickness_mm = 1.6
+copper_oz = 1.0
+solder_mask = "green"
+silkscreen = "white"
+surface_finish = "lead-free ENIG"
+
+[assembly]
+vendor = "JLCPCB"
+units = "mm"
+default_population = "fitted"
+dnp_policy = "Any component intended for hand assembly must be marked DNP in KiCad."
+
+[release]
+output_dir = "dist"
+require_clean_git = true
+tag_prefix = "hardware-v"

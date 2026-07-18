@@ -1,0 +1,156 @@
+{
+  "jobs": [
+    {
+      "description": "Release ERC",
+      "id": "6cf07887-8ed2-4d2b-840b-ae8c15815518",
+      "settings": {
+        "description": "",
+        "fail_on_error": true,
+        "format": "json",
+        "output_filename": "validation/erc.json",
+        "severity": 48,
+        "units": "mm"
+      },
+      "type": "sch_erc"
+    },
+    {
+      "description": "Release DRC",
+      "id": "af569fe0-4cb0-447e-8929-8959774704b6",
+      "settings": {
+        "description": "",
+        "fail_on_error": true,
+        "format": "json",
+        "output_filename": "validation/drc.json",
+        "parity": false,
+        "report_all_track_errors": true,
+        "severity": 48,
+        "units": "mm"
+      },
+      "type": "pcb_drc"
+    },
+    {
+      "description": "Schematic PDF",
+      "id": "ba7bdca5-fcb0-42cb-a7e7-8895fc3a5806",
+      "settings": {
+        "black_and_white": true,
+        "color_theme": "KiCad Classic",
+        "description": "",
+        "drawing_sheet": "",
+        "format": "pdf",
+        "hpgl_page_size": "default",
+        "hpgl_pen_size": 1.016,
+        "hpgl_plot_origin": "A3",
+        "min_pen_width": 508,
+        "output_dir": "documentation",
+        "page_size": "auto",
+        "pdf_hierarchical_links": true,
+        "pdf_metadata": true,
+        "pdf_property_popups": true,
+        "plot_all": true,
+        "plot_drawing_sheet": true,
+        "use_background_color": false
+      },
+      "type": "sch_export_plot_pdf"
+    },
+    {
+      "description": "Native fitted BOM",
+      "id": "5a34e566-7bd1-4ba1-a629-a262d06f1f24",
+      "settings": {
+        "description": "",
+        "exclude_dnp": true,
+        "field_delimiter": ",",
+        "fields_group_by": ["Value", "Footprint", "MPN", "LCSC Part #"],
+        "fields_labels": ["Designator", "Comment", "Footprint", "Quantity", "Manufacturer", "MPN", "LCSC Part #", "BOM Comments"],
+        "fields_ordered": ["Reference", "Value", "Footprint", "${QUANTITY}", "Manufacturer", "MPN", "LCSC Part #", "BOM Comments"],
+        "filter_string": "",
+        "include_excluded_from_bom": false,
+        "keep_line_breaks": false,
+        "keep_tabs": false,
+        "output_filename": "assembly/native-bom.csv",
+        "ref_delimiter": ",",
+        "ref_range_delimiter": "",
+        "sort_asc": true,
+        "sort_field": "Reference",
+        "string_delimiter": "\""
+      },
+      "type": "sch_export_bom"
+    },
+    {
+      "description": "Excellon drill files and maps",
+      "id": "31503bf0-0d84-49e8-83cf-bf3b8f601ca0",
+      "settings": {
+        "description": "",
+        "drill_origin": "abs",
+        "excellon.combine_pth_npth": false,
+        "excellon.minimal_header": false,
+        "excellon.mirror_y": false,
+        "excellon.oval_drill_route": false,
+        "format": "excellon",
+        "generate_map": true,
+        "gerber_precision": 6,
+        "map_format": "pdf",
+        "output_dir": "fabrication",
+        "units": "mm",
+        "zero_format": "decimal"
+      },
+      "type": "pcb_export_drill"
+    },
+    {
+      "description": "JLCPCB Gerbers",
+      "id": "97366601-3a55-429f-94c3-d2a224db9150",
+      "settings": {
+        "description": "",
+        "disable_aperture_macros": false,
+        "exclude_ref_des": false,
+        "exclude_value": false,
+        "include_border_title": false,
+        "layers": ["F.Cu", "B.Cu", "F.Paste", "B.Paste", "F.SilkS", "B.SilkS", "F.Mask", "B.Mask", "Edge.Cuts"],
+        "layers_to_include_on_all_layers": [],
+        "mirror": false,
+        "negative": false,
+        "output_filename": "fabrication",
+        "plot_drawing_sheet": false,
+        "plot_footprint_values": false,
+        "plot_pad_numbers": false,
+        "plot_ref_des": true,
+        "precision": 6,
+        "sketch_dnp_footprints_on_fab_layers": false,
+        "sketch_pads_on_fab_layers": false,
+        "subtract_solder_mask_from_silk": true,
+        "use_drill_origin": false,
+        "use_protel_file_extension": true,
+        "use_x2_format": true
+      },
+      "type": "pcb_export_gerbers"
+    },
+    {
+      "description": "Fitted component placement",
+      "id": "18d65247-3dd0-46c5-b13e-0e611a07a3d3",
+      "settings": {
+        "description": "",
+        "exclude_dnp": true,
+        "exclude_footprints_with_th": false,
+        "format": "csv",
+        "gerber_board_edge": false,
+        "negate_bottom_x": false,
+        "output_filename": "assembly/native-position.csv",
+        "side": "both",
+        "single_file": true,
+        "smd_only": false,
+        "units": "mm",
+        "use_drill_place_file_origin": false
+      },
+      "type": "pcb_export_pos"
+    }
+  ],
+  "meta": {"version": 1},
+  "outputs": [
+    {
+      "description": "Local release staging",
+      "id": "3c9060ed-0bad-4c52-b23a-9f2f76fc5411",
+      "only": [],
+      "settings": {"output_path": "outputs/jobset"},
+      "type": "folder"
+    }
+  ]
+}

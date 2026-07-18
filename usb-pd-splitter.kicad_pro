@@ -712,7 +712,10 @@
       "usb-pd-splitter"
     ]
   ],
-  "text_variables": {},
+  "text_variables": {
+    "HW_REVISION": "A",
+    "HW_VERSION": "1.0.0"
+  },
   "tuning_profiles": {
     "meta": {
       "version": 0
