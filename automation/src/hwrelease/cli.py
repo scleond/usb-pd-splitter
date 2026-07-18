@@ -42,6 +42,14 @@ class Part:
     fields: dict[str, str]
 
 
+@dataclass(frozen=True)
+class ReleasePackage:
+    release_dir: Path
+    archive: Path
+    archive_checksum: Path
+    tag: str
+
+
 def project_root(start: Path | None = None) -> Path:
     path = (start or Path.cwd()).resolve()
     for candidate in (path, *path.parents):
@@ -335,6 +343,197 @@ def zip_directory(source: Path, target: Path) -> None:
                 archive.write(path, path.relative_to(source))
 
 
+def release_identity(profile: dict) -> tuple[str, str]:
+    project = profile["project"]
+    release_name = f"{project['slug']}-rev-{project['revision'].lower()}-v{project['version']}"
+    tag = f"{profile['release']['tag_prefix']}{project['version']}"
+    return release_name, tag
+
+
+def verify_release_checksums(release: Path) -> None:
+    sums_path = release / "SHA256SUMS"
+    if not sums_path.exists():
+        raise RuntimeError(f"Missing release checksums: {sums_path}")
+    expected_files: set[Path] = set()
+    release_resolved = release.resolve()
+    for line in sums_path.read_text(encoding="utf-8").splitlines():
+        try:
+            expected_hash, relative_text = line.split("  ", 1)
+        except ValueError as exc:
+            raise RuntimeError(f"Malformed checksum line in {sums_path}: {line!r}") from exc
+        relative = Path(relative_text)
+        if relative.is_absolute() or ".." in relative.parts:
+            raise RuntimeError(f"Unsafe path in {sums_path}: {relative_text}")
+        target = (release / relative).resolve()
+        try:
+            target.relative_to(release_resolved)
+        except ValueError as exc:
+            raise RuntimeError(f"Checksum path escapes release directory: {relative_text}") from exc
+        if not target.is_file():
+            raise RuntimeError(f"Release file listed in checksums is missing: {relative_text}")
+        if sha256(target) != expected_hash:
+            raise RuntimeError(f"Release checksum mismatch: {relative_text}")
+        expected_files.add(relative)
+    actual_files = {
+        path.relative_to(release)
+        for path in release.rglob("*")
+        if path.is_file() and path.name != "SHA256SUMS"
+    }
+    if actual_files != expected_files:
+        raise RuntimeError(
+            f"Release checksum coverage mismatch: unlisted={sorted(actual_files-expected_files)}, "
+            f"missing={sorted(expected_files-actual_files)}"
+        )
+
+
+def csv_references(path: Path, column: str) -> set[str]:
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        rows = csv.DictReader(handle)
+        return {
+            reference.strip()
+            for row in rows
+            for reference in row.get(column, "").split(",")
+            if reference.strip()
+        }
+
+
+def verify_release(root: Path, release: Path, profile: dict) -> dict:
+    manifest_path = release / "manifest.json"
+    if not manifest_path.exists():
+        raise RuntimeError(f"Missing release manifest: {manifest_path}")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    head = git(root, "rev-parse", "HEAD")
+    if manifest.get("git_commit") != head or manifest.get("git_dirty"):
+        raise RuntimeError("Release was not built cleanly from the current commit; rebuild it before packaging")
+    if manifest.get("project") != profile["project"]:
+        raise RuntimeError("Release manifest project/version does not match the current manufacturing profile")
+    pro, sch, pcb = project_files(root)
+    current_sources = {path.name: sha256(path) for path in (pro, sch, pcb)}
+    if manifest.get("source_sha256") != current_sources:
+        raise RuntimeError("Release source hashes do not match the current KiCad sources; rebuild it before packaging")
+    validation = manifest.get("validation", {})
+    for kind in ("erc", "drc"):
+        counts = validation.get(kind, {})
+        if counts.get("error", 0) or counts.get("warning", 0):
+            raise RuntimeError(f"Release manifest contains nonzero {kind.upper()} findings")
+    if validation.get("warnings_allowed"):
+        raise RuntimeError("Release was built with warnings allowed and cannot be formally packaged")
+    verify_release_checksums(release)
+    bom = release / "assembly/jlcpcb-bom.csv"
+    cpl = release / "assembly/jlcpcb-cpl.csv"
+    bom_refs = csv_references(bom, "Designator")
+    cpl_refs = csv_references(cpl, "Designator")
+    if bom_refs != cpl_refs:
+        raise RuntimeError(
+            f"BOM/CPL fitted reference mismatch: BOM-only={sorted(bom_refs-cpl_refs)}, "
+            f"CPL-only={sorted(cpl_refs-bom_refs)}"
+        )
+    for required in (release / "fabrication/jlcpcb-gerbers.zip", bom, cpl):
+        if not required.is_file():
+            raise RuntimeError(f"Missing required manufacturing asset: {required}")
+    return manifest
+
+
+def create_release_archive(release: Path, archive: Path) -> Path:
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    temporary = archive.with_name(f".{archive.name}.tmp")
+    try:
+        with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as target:
+            for path in sorted(release.rglob("*")):
+                if path.is_file():
+                    target.write(path, Path(release.name) / path.relative_to(release))
+        os.replace(temporary, archive)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    checksum = archive.with_suffix(archive.suffix + ".sha256")
+    checksum.write_text(f"{sha256(archive)}  {archive.name}\n", encoding="ascii")
+    return checksum
+
+
+def package_release(root: Path, allow_dirty: bool = False) -> ReleasePackage:
+    errors, warnings = validate(root, allow_dirty=allow_dirty)
+    for warning in warnings:
+        print(f"WARNING: {warning}")
+    if errors:
+        raise RuntimeError("Package preflight failed:\n- " + "\n- ".join(errors))
+    profile = load_profile(root)
+    release_name, tag = release_identity(profile)
+    dist = root / profile["release"]["output_dir"]
+    release = dist / release_name
+    if not release.exists():
+        release = build(root, allow_dirty=allow_dirty, allow_warnings=False)
+    verify_release(root, release, profile)
+    archive = dist / f"{release_name}.zip"
+    checksum = create_release_archive(release, archive)
+    return ReleasePackage(release, archive, checksum, tag)
+
+
+def github_release_command(gh: str, package: ReleasePackage, profile: dict, commit: str) -> list[str]:
+    project = profile["project"]
+    title = f"{project['title']} hardware v{project['version']} (Rev {project['revision']})"
+    notes = (
+        f"Hardware revision {project['revision']}, version {project['version']}.\n\n"
+        f"Clean manufacturing package built from commit `{commit}` with zero ERC/DRC warnings or errors. "
+        "The complete archive includes Gerbers, drill files, JLCPCB BOM/CPL, assembly drawings, "
+        "schematic PDF, STEP model, 3D renders, exchange files, validation reports, manifest, and checksums."
+    )
+    release = package.release_dir
+    assets = [
+        package.archive,
+        package.archive_checksum,
+        release / "SHA256SUMS",
+        release / "fabrication/jlcpcb-gerbers.zip",
+        release / "assembly/jlcpcb-bom.csv",
+        release / "assembly/jlcpcb-cpl.csv",
+    ]
+    return [
+        gh,
+        "release",
+        "create",
+        package.tag,
+        *(str(path) for path in assets),
+        "--draft",
+        "--verify-tag",
+        "--title",
+        title,
+        "--notes",
+        notes,
+    ]
+
+
+def verify_remote_tag(root: Path, tag: str) -> str:
+    head = git(root, "rev-parse", "HEAD")
+    local = subprocess.run(
+        ["git", "rev-parse", f"{tag}^{{}}"], cwd=root, text=True, capture_output=True, check=False
+    )
+    if local.returncode or local.stdout.strip() != head:
+        raise RuntimeError(f"Local tag {tag} must exist and resolve to current commit {head}")
+    remote = run(["git", "ls-remote", "--tags", "origin", f"refs/tags/{tag}", f"refs/tags/{tag}^{{}}"], root)
+    refs = {}
+    for line in remote.stdout.splitlines():
+        commit, ref = line.split(maxsplit=1)
+        refs[ref] = commit
+    remote_commit = refs.get(f"refs/tags/{tag}^{{}}", refs.get(f"refs/tags/{tag}"))
+    if remote_commit != head:
+        raise RuntimeError(f"Remote tag {tag} is missing or does not resolve to current commit {head}")
+    return head
+
+
+def publish_draft(root: Path, placement_reviewed: bool) -> ReleasePackage:
+    if not placement_reviewed:
+        raise RuntimeError("Refusing GitHub release: pass --placement-reviewed after checking the JLCPCB preview")
+    package = package_release(root)
+    gh = shutil.which("gh")
+    if not gh:
+        raise RuntimeError("GitHub CLI is not available on PATH")
+    run([gh, "auth", "status", "-h", "github.com"], root)
+    commit = verify_remote_tag(root, package.tag)
+    profile = load_profile(root)
+    run(github_release_command(gh, package, profile, commit), root)
+    return package
+
+
 def build(root: Path, allow_dirty: bool, allow_warnings: bool, keep_failed: bool = False) -> Path:
     errors, warnings = validate(root, allow_dirty=allow_dirty)
     for warning in warnings:
@@ -343,7 +542,7 @@ def build(root: Path, allow_dirty: bool, allow_warnings: bool, keep_failed: bool
         raise RuntimeError("Preflight failed:\n- " + "\n- ".join(errors))
     profile = load_profile(root)
     pro, sch, pcb = project_files(root)
-    release_name = f"{profile['project']['slug']}-rev-{profile['project']['revision'].lower()}-v{profile['project']['version']}"
+    release_name, _tag = release_identity(profile)
     dist = root / profile["release"]["output_dir"]
     dist.mkdir(exist_ok=True)
     final = dist / release_name
@@ -424,11 +623,13 @@ def inspect(root: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="hwrelease")
-    parser.add_argument("command", choices=("validate", "build", "inspect", "render-docs"))
+    parser.add_argument("command", choices=("validate", "build", "inspect", "render-docs", "package", "publish"))
     parser.add_argument("--project-root", type=Path)
     parser.add_argument("--allow-dirty", action="store_true")
     parser.add_argument("--allow-warnings", action="store_true")
     parser.add_argument("--keep-failed", action="store_true")
+    parser.add_argument("--draft", action="store_true", help="Required for publish; public publishing stays manual")
+    parser.add_argument("--placement-reviewed", action="store_true")
     args = parser.parse_args()
     root = project_root(args.project_root)
     try:
@@ -445,8 +646,17 @@ def main() -> None:
             print(f"Release created: {build(root, args.allow_dirty, args.allow_warnings, args.keep_failed)}")
         elif args.command == "inspect":
             inspect(root)
-        else:
+        elif args.command == "render-docs":
             print(f"README render created: {render_docs(root)}")
+        elif args.command == "package":
+            package = package_release(root, allow_dirty=args.allow_dirty)
+            print(f"Release archive created: {package.archive}")
+            print(f"Archive checksum created: {package.archive_checksum}")
+        else:
+            if not args.draft:
+                raise RuntimeError("Publish only creates drafts; pass --draft explicitly")
+            package = publish_draft(root, args.placement_reviewed)
+            print(f"Draft GitHub release created for {package.tag}")
     except RuntimeError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)

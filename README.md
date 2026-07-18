@@ -51,10 +51,14 @@ Install [uv](https://docs.astral.sh/uv/), then run from the repository root:
 uv run --project automation hwrelease validate
 uv run --project automation hwrelease build
 uv run --project automation hwrelease inspect
+uv run --project automation hwrelease package
 ```
 
 After PCB or project-local 3D-model changes, refresh the tracked image with
 `uv run --project automation hwrelease render-docs`; validation rejects stale renders.
+
+After the JLCPCB placement preview and pushing the version tag, create a GitHub draft with
+`uv run --project automation hwrelease publish --draft --placement-reviewed`.
 
 During development, `--allow-dirty` permits an explicitly marked dirty-tree build.
 Formal packages require a clean commit, zero ERC/DRC/parity findings, and a matching

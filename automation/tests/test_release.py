@@ -2,13 +2,18 @@ import csv
 import json
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from hwrelease.cli import (
+    ReleasePackage,
+    create_release_archive,
     documentation_render_errors,
     documentation_render_paths,
     expected_render_metadata,
+    github_release_command,
     isometric_render_command,
+    release_identity,
     sha256,
     convert_cpl,
     natural_key,
@@ -67,6 +72,39 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(documentation_render_errors(root, profile, pro, pcb), [])
             pcb.write_text("board-v2", encoding="utf-8")
             self.assertIn("stale", documentation_render_errors(root, profile, pro, pcb)[0])
+
+    def test_release_identity_uses_hardware_tag_prefix(self):
+        profile = {
+            "project": {"slug": "widget", "revision": "B", "version": "2.3.4"},
+            "release": {"tag_prefix": "hardware-v"},
+        }
+        self.assertEqual(release_identity(profile), ("widget-rev-b-v2.3.4", "hardware-v2.3.4"))
+
+    def test_release_archive_contains_root_and_checksum(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            release = root / "widget-rev-a-v1.0.0"
+            release.mkdir()
+            (release / "manifest.json").write_text("{}", encoding="utf-8")
+            archive = root / "widget-rev-a-v1.0.0.zip"
+            checksum = create_release_archive(release, archive)
+            self.assertTrue(archive.is_file())
+            self.assertEqual(checksum.read_text(encoding="ascii"), f"{sha256(archive)}  {archive.name}\n")
+            with zipfile.ZipFile(archive) as handle:
+                self.assertEqual(handle.namelist(), ["widget-rev-a-v1.0.0/manifest.json"])
+
+    def test_github_release_command_is_always_draft_and_verifies_tag(self):
+        root = Path("dist/widget-rev-a-v1.0.0")
+        package = ReleasePackage(root, Path("dist/widget.zip"), Path("dist/widget.zip.sha256"), "hardware-v1.0.0")
+        profile = {
+            "project": {"slug": "widget", "title": "Widget", "revision": "A", "version": "1.0.0"},
+            "release": {"tag_prefix": "hardware-v"},
+        }
+        command = github_release_command("gh", package, profile, "abc123")
+        self.assertEqual(command[:4], ["gh", "release", "create", "hardware-v1.0.0"])
+        self.assertIn("--draft", command)
+        self.assertIn("--verify-tag", command)
+        self.assertNotIn("--latest", command)
 
 
 if __name__ == "__main__":
