@@ -16,6 +16,9 @@ from hwrelease.cli import (
     github_release_command,
     isometric_render_command,
     release_identity,
+    reviewed_bom_content,
+    reviewed_bom_errors,
+    reviewed_bom_path,
     sha256,
     standard_3d_model_directory,
     convert_cpl,
@@ -39,6 +42,26 @@ class ReleaseTests(unittest.TestCase):
         self.assertTrue(all(part.fields.get("Manufacturer") for part in fitted))
         self.assertTrue(all(part.fields.get("MPN") for part in fitted))
         self.assertTrue(all(part.fields.get("LCSC Part #") for part in fitted))
+
+    def test_reviewed_bom_snapshot_matches_schematic(self):
+        profile = {"project": {"slug": "usb-pd-splitter", "revision": "A"}}
+        parts = parse_parts(ROOT / "usb-pd-splitter.kicad_sch")
+        snapshot = reviewed_bom_path(ROOT, profile)
+        self.assertEqual(snapshot.read_text(encoding="utf-8"), reviewed_bom_content(parts))
+        self.assertEqual(reviewed_bom_errors(ROOT, profile, parts), [])
+
+    def test_reviewed_bom_errors_on_stale_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            profile = {"project": {"slug": "widget", "revision": "B"}}
+            snapshot = reviewed_bom_path(root, profile)
+            snapshot.parent.mkdir()
+            snapshot.write_text("stale\n", encoding="utf-8")
+            part = parse_parts(ROOT / "usb-pd-splitter.kicad_sch")[0]
+            self.assertEqual(
+                reviewed_bom_errors(root, profile, [part]),
+                ["Reviewed BOM snapshot is stale: bom/widget-rev-b.csv (run hwrelease export-bom)"],
+            )
 
     def test_cpl_uses_jlc_headers_and_normalized_rotation(self):
         with tempfile.TemporaryDirectory() as directory:

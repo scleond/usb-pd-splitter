@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import io
 import json
 import os
 import re
@@ -18,6 +19,17 @@ from pathlib import Path
 
 
 REQUIRED_FIELDS = ("Manufacturer", "MPN", "LCSC Part #")
+REVIEWED_BOM_HEADERS = (
+    "Quantity",
+    "References",
+    "Value",
+    "Footprint",
+    "Manufacturer",
+    "MPN",
+    "LCSC Part #",
+    "JLCPCB Class",
+    "Population",
+)
 PROPERTY_RE = re.compile(r'\(property\s+"([^"]+)"\s+"([^"]*)"')
 MODEL_EXTENSIONS = {".step", ".stp", ".wrl", ".obj", ".ply", ".gltf", ".glb"}
 ISOMETRIC_RENDER_SETTINGS = (
@@ -115,6 +127,64 @@ def parse_parts(schematic: Path) -> list[Part]:
 
 def natural_key(value: str) -> tuple:
     return tuple(int(piece) if piece.isdigit() else piece for piece in re.split(r"(\d+)", value))
+
+
+def reviewed_bom_path(root: Path, profile: dict) -> Path:
+    project = profile["project"]
+    return root / "bom" / f"{project['slug']}-rev-{project['revision'].lower()}.csv"
+
+
+def jlcpcb_class(part: Part) -> str:
+    match = re.search(r"\bJLCPCB\s+(basic|extended)\s+part\b", part.fields.get("BOM Comments", ""), re.IGNORECASE)
+    if not match:
+        raise ValueError(f"{part.reference}: BOM Comments must declare JLCPCB basic or extended part class")
+    return match.group(1).title()
+
+
+def reviewed_bom_content(parts: list[Part]) -> str:
+    groups: dict[tuple[str, str, str, str, str, str], list[str]] = {}
+    for part in parts:
+        if part.dnp:
+            continue
+        key = (
+            part.value,
+            part.footprint,
+            part.fields["Manufacturer"],
+            part.fields["MPN"],
+            part.fields["LCSC Part #"],
+            jlcpcb_class(part),
+        )
+        groups.setdefault(key, []).append(part.reference)
+
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(REVIEWED_BOM_HEADERS)
+    rows = []
+    for (value, footprint, manufacturer, mpn, lcsc, part_class), references in groups.items():
+        references.sort(key=natural_key)
+        rows.append((references, [len(references), ",".join(references), value, footprint, manufacturer, mpn, lcsc, part_class, "Fitted"]))
+    for _references, row in sorted(rows, key=lambda item: natural_key(item[0][0])):
+        writer.writerow(row)
+    return output.getvalue()
+
+
+def write_reviewed_bom(parts: list[Part], output: Path) -> None:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(reviewed_bom_content(parts), encoding="utf-8", newline="")
+
+
+def reviewed_bom_errors(root: Path, profile: dict, parts: list[Part]) -> list[str]:
+    try:
+        expected = reviewed_bom_content(parts)
+    except (KeyError, ValueError) as exc:
+        return [str(exc)]
+    snapshot = reviewed_bom_path(root, profile)
+    relative_snapshot = snapshot.relative_to(root).as_posix()
+    if not snapshot.exists():
+        return [f"Missing reviewed BOM snapshot: {relative_snapshot} (run hwrelease export-bom)"]
+    if snapshot.read_text(encoding="utf-8") != expected:
+        return [f"Reviewed BOM snapshot is stale: {relative_snapshot} (run hwrelease export-bom)"]
+    return []
 
 
 def git(root: Path, *args: str) -> str:
@@ -314,6 +384,7 @@ def validate(root: Path, allow_dirty: bool = False) -> tuple[list[str], list[str
             for field in REQUIRED_FIELDS:
                 if not part.fields.get(field, "").strip():
                     errors.append(f"{part.reference}: fitted part missing {field}")
+    errors.extend(reviewed_bom_errors(root, profile, parts))
     dirty = bool(git(root, "status", "--porcelain"))
     if dirty and not allow_dirty:
         errors.append("Git working tree is dirty (use --allow-dirty for development builds)")
@@ -679,6 +750,14 @@ def build(root: Path, allow_dirty: bool, allow_warnings: bool, keep_failed: bool
         raise
 
 
+def export_reviewed_bom(root: Path) -> Path:
+    profile = load_profile(root)
+    _pro, sch, _pcb = project_files(root)
+    output = reviewed_bom_path(root, profile)
+    write_reviewed_bom(parse_parts(sch), output)
+    return output
+
+
 def inspect(root: Path) -> None:
     profile = load_profile(root)
     dist = root / profile["release"]["output_dir"]
@@ -696,7 +775,7 @@ def inspect(root: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="hwrelease")
-    parser.add_argument("command", choices=("validate", "build", "inspect", "render-docs", "package", "publish"))
+    parser.add_argument("command", choices=("validate", "export-bom", "build", "inspect", "render-docs", "package", "publish"))
     parser.add_argument("--project-root", type=Path)
     parser.add_argument("--allow-dirty", action="store_true")
     parser.add_argument("--allow-warnings", action="store_true")
@@ -715,6 +794,8 @@ def main() -> None:
                     print(f"ERROR: {error}", file=sys.stderr)
                 raise SystemExit(1)
             print("Release metadata and BOM preflight passed")
+        elif args.command == "export-bom":
+            print(f"Reviewed BOM exported: {export_reviewed_bom(root)}")
         elif args.command == "build":
             print(f"Release created: {build(root, args.allow_dirty, args.allow_warnings, args.keep_failed)}")
         elif args.command == "inspect":
