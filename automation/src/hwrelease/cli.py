@@ -336,10 +336,10 @@ def convert_cpl(native: Path, output: Path) -> set[str]:
     return refs
 
 
-def zip_directory(source: Path, target: Path) -> None:
+def zip_directory(source: Path, target: Path, *, excluded_suffixes: frozenset[str] = frozenset()) -> None:
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(source.rglob("*")):
-            if path.is_file():
+            if path.is_file() and path.suffix.lower() not in excluded_suffixes:
                 archive.write(path, path.relative_to(source))
 
 
@@ -572,7 +572,13 @@ def build(root: Path, allow_dirty: bool, allow_warnings: bool, keep_failed: bool
         run([kicad, "pcb", "export", "ipcd356", "--output", str(temp / "fabrication/board.d356"), str(pcb)], root)
         run([kicad, "pcb", "export", "ipc2581", "--output", str(temp / "exchange/board-ipc2581.zip"), "--compress", "--version", "C", "--units", "mm", "--bom-col-mfg-pn", "MPN", "--bom-col-mfg", "Manufacturer", "--bom-col-dist-pn", "LCSC Part #", "--bom-col-dist", "LCSC/JLCPCB", "--bom-rev", profile["project"]["revision"], str(pcb)], root, required=False)
         run([kicad, "pcb", "export", "odb", "--output", str(temp / "exchange/board-odb.zip"), "--compression", "zip", "--units", "mm", str(pcb)], root, required=False)
-        zip_directory(temp / "fabrication/raw", temp / "fabrication/jlcpcb-gerbers.zip")
+        # Drill-map PDFs remain in fabrication/raw for human review, but JLCPCB's
+        # fabrication upload should contain only machine-consumable Gerber/drill files.
+        zip_directory(
+            temp / "fabrication/raw",
+            temp / "fabrication/jlcpcb-gerbers.zip",
+            excluded_suffixes=frozenset({".pdf"}),
+        )
         parts = parse_parts(sch)
         bom_refs = write_jlc_bom(parts, temp / "assembly/jlcpcb-bom.csv")
         cpl_refs = convert_cpl(temp / "assembly/native-position.csv", temp / "assembly/jlcpcb-cpl.csv")

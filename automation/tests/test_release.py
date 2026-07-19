@@ -18,6 +18,7 @@ from hwrelease.cli import (
     convert_cpl,
     natural_key,
     parse_parts,
+    zip_directory,
 )
 
 
@@ -92,6 +93,21 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(checksum.read_text(encoding="ascii"), f"{sha256(archive)}  {archive.name}\n")
             with zipfile.ZipFile(archive) as handle:
                 self.assertEqual(handle.namelist(), ["widget-rev-a-v1.0.0/manifest.json"])
+
+    def test_jlcpcb_gerber_zip_excludes_review_pdfs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "raw"
+            source.mkdir()
+            (source / "board-F_Cu.gtl").write_text("copper", encoding="ascii")
+            (source / "board-PTH.drl").write_text("drill", encoding="ascii")
+            (source / "board-PTH-drl_map.pdf").write_bytes(b"review map")
+            archive = root / "jlcpcb-gerbers.zip"
+
+            zip_directory(source, archive, excluded_suffixes=frozenset({".pdf"}))
+
+            with zipfile.ZipFile(archive) as handle:
+                self.assertEqual(handle.namelist(), ["board-F_Cu.gtl", "board-PTH.drl"])
 
     def test_github_release_command_is_always_draft_and_verifies_tag(self):
         root = Path("dist/widget-rev-a-v1.0.0")
