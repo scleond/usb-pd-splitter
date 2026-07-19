@@ -6,7 +6,7 @@
 4. Save the schematic, update the PCB from the schematic, refill zones, and save.
 5. Run `uv run --project automation hwrelease export-bom` after any fitted-part change.
 6. Run `uv run --project automation hwrelease validate` until all metadata gates pass.
-7. Run the native KiCad jobset or ERC/DRC and resolve every non-excluded finding.
+7. Run the native KiCad jobset or ERC/DRC and resolve every non-excluded finding. The jobset writes local review outputs to `outputs/jobset/`, including front/back assembly PDFs and a STEP model; the formal builder recreates them in `dist/`. Review the drawings and STEP model. Add board-specific drawing notes in PCB Editor on `Dwgs.User` or `Cmts.User` so they appear in the PDFs.
 8. Commit the complete design and run `uv run --project automation hwrelease build` from a clean tree.
 9. Run `hwrelease inspect`, verify checksums, and compare BOM/CPL with Fabrication Toolkit.
 10. Optionally generate InteractiveHtmlBom for internal review or hand-assembly guidance.

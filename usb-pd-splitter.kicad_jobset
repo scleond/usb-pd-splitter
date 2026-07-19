@@ -141,6 +141,81 @@
         "use_drill_place_file_origin": false
       },
       "type": "pcb_export_pos"
+    },
+    {
+      "description": "Front assembly drawing",
+      "id": "7e1c39f2-4c82-4e38-a214-57e2c9bd8b5f",
+      "settings": {
+        "black_and_white": true,
+        "check_zones": true,
+        "color_theme": "KiCad Classic",
+        "description": "",
+        "drawing_sheet": "",
+        "drill_shape": "full",
+        "hide_dnp_footprints_on_fab_layers": true,
+        "layers": ["F.Fab", "F.SilkS", "Dwgs.User", "Cmts.User", "Edge.Cuts"],
+        "layers_to_include_on_all_layers": [],
+        "mirror": false,
+        "negative": false,
+        "output_filename": "assembly/assembly-front.pdf",
+        "pdf_gen_mode": "all-layers-one-file",
+        "pdf_metadata": true,
+        "plot_drawing_sheet": true,
+        "plot_footprint_values": false,
+        "plot_pad_numbers": true,
+        "plot_ref_des": true,
+        "single_document": true,
+        "sketch_dnp_footprints_on_fab_layers": false,
+        "sketch_pads_on_fab_layers": true,
+        "subtract_solder_mask_from_silk": false,
+        "use_drill_origin": false
+      },
+      "type": "pcb_export_pdf"
+    },
+    {
+      "description": "Back assembly drawing",
+      "id": "b9a6cdd0-2892-4985-a2d2-36af6c88da13",
+      "settings": {
+        "black_and_white": true,
+        "check_zones": true,
+        "color_theme": "KiCad Classic",
+        "description": "",
+        "drawing_sheet": "",
+        "drill_shape": "full",
+        "hide_dnp_footprints_on_fab_layers": true,
+        "layers": ["B.Fab", "B.SilkS", "Dwgs.User", "Cmts.User", "Edge.Cuts"],
+        "layers_to_include_on_all_layers": [],
+        "mirror": true,
+        "negative": false,
+        "output_filename": "assembly/assembly-back.pdf",
+        "pdf_gen_mode": "all-layers-one-file",
+        "pdf_metadata": true,
+        "plot_drawing_sheet": true,
+        "plot_footprint_values": false,
+        "plot_pad_numbers": true,
+        "plot_ref_des": true,
+        "single_document": true,
+        "sketch_dnp_footprints_on_fab_layers": false,
+        "sketch_pads_on_fab_layers": true,
+        "subtract_solder_mask_from_silk": false,
+        "use_drill_origin": false
+      },
+      "type": "pcb_export_pdf"
+    },
+    {
+      "description": "Assembly STEP model",
+      "id": "63f68543-414e-4f1c-bf38-8d8571b7ca1d",
+      "settings": {
+        "description": "",
+        "format": "step",
+        "include_dnp": false,
+        "include_unspecified": true,
+        "optimize_step": true,
+        "output_filename": "mechanical/board.step",
+        "overwrite": true,
+        "subst_models": true
+      },
+      "type": "pcb_export_3d"
     }
   ],
   "meta": {"version": 1},

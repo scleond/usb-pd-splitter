@@ -43,6 +43,27 @@ class ReleaseTests(unittest.TestCase):
         self.assertTrue(all(part.fields.get("MPN") for part in fitted))
         self.assertTrue(all(part.fields.get("LCSC Part #") for part in fitted))
 
+    def test_jobset_exports_assembly_drawings_and_step_model(self):
+        jobset = json.loads((ROOT / "usb-pd-splitter.kicad_jobset").read_text(encoding="utf-8"))
+        jobs = {job["description"]: job for job in jobset["jobs"]}
+
+        front = jobs["Front assembly drawing"]
+        self.assertEqual(front["type"], "pcb_export_pdf")
+        self.assertEqual(front["settings"]["output_filename"], "assembly/assembly-front.pdf")
+        self.assertTrue({"F.Fab", "F.SilkS", "Dwgs.User", "Cmts.User", "Edge.Cuts"}.issubset(front["settings"]["layers"]))
+        self.assertTrue(front["settings"]["hide_dnp_footprints_on_fab_layers"])
+
+        back = jobs["Back assembly drawing"]
+        self.assertEqual(back["type"], "pcb_export_pdf")
+        self.assertEqual(back["settings"]["output_filename"], "assembly/assembly-back.pdf")
+        self.assertTrue(back["settings"]["mirror"])
+
+        step = jobs["Assembly STEP model"]
+        self.assertEqual(step["type"], "pcb_export_3d")
+        self.assertEqual(step["settings"]["format"], "step")
+        self.assertEqual(step["settings"]["output_filename"], "mechanical/board.step")
+        self.assertFalse(step["settings"]["include_dnp"])
+
     def test_reviewed_bom_snapshot_matches_schematic(self):
         profile = {"project": {"slug": "usb-pd-splitter", "revision": "A"}}
         parts = parse_parts(ROOT / "usb-pd-splitter.kicad_sch")
