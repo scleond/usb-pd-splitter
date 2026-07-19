@@ -30,9 +30,7 @@ __pycache__/
 /bom/orders/
 
 # Analysis output -- regenerable from source files
-analysis/*
-!analysis/.gitignore
-!analysis/manifest.json
+/analysis/
 
 # OS files
 .DS_Store
