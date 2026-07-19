@@ -2,7 +2,7 @@
 slug = "usb-pd-splitter"
 title = "USB-PD Splitter"
 revision = "A"
-version = "1.0.0"
+version = "1.1.0"
 kicad_major = 10
 
 [fabrication]

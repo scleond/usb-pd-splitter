@@ -3,7 +3,7 @@
     "name": "USB-PD Splitter",
     "number": "USB-PD-SPLITTER",
     "revision": "A",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "market": "prototype"
   },
   "analysis": {

@@ -21,8 +21,8 @@
     "-45,0,45"
   ],
   "sources": {
-    "usb-pd-splitter.kicad_pro": "9363cee3e34363555ae7ec703e0cb976c81f389dd74d7cc7fb781868342c6e88",
-    "usb-pd-splitter.kicad_pcb": "227e319f6eeea981109fad2ecebd32866bb34c1a26c148610c9d53a89b78f5cc"
+    "usb-pd-splitter.kicad_pro": "d34aeb79cf6c29daccbac3153ad76ca064620308838473b24e59359a9205c15f",
+    "usb-pd-splitter.kicad_pcb": "94f3ce5e270391a73e01b5bb243ba14035f3571fe932fd77162c6b5fa5636415"
   },
-  "image_sha256": "f214dc4dcdd6e6883532d78f6cc8cde8e5cb3d81189c90c40a7c29a7cb55e311"
+  "image_sha256": "15b60582a3b91862cb09d8b90294fd02ba64eb86e9ca00c6f618d9559fa8b6ac"
 }

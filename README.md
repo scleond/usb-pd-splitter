@@ -45,24 +45,145 @@ The design currently targets USB 2.0 data only; USB 3.x, USB4, and alternate-mod
 
 ## Manufacturing release
 
-Install [uv](https://docs.astral.sh/uv/), then run from the repository root:
+Install [KiCad 10](https://www.kicad.org/), make sure `kicad-cli` is on `PATH`, and
+install [uv](https://docs.astral.sh/uv/). Run all commands below from the repository
+root. The short version is `validate` -> `build` -> `inspect` -> JLCPCB draft upload
+-> `package` -> tag -> guarded GitHub draft; the complete process is explained below.
 
-```powershell
-uv run --project automation hwrelease validate
-uv run --project automation hwrelease build
-uv run --project automation hwrelease inspect
-uv run --project automation hwrelease package
-```
+1. **Set the release identity.** Update the schematic and PCB title-block revision,
+   the `HW_REVISION` and `HW_VERSION` project variables, and the matching `revision`
+   and `version` values in `manufacturing/profiles/jlcpcb.toml`. These values determine
+   the release directory, archive name, manifest identity, and Git tag, so they must
+   describe the same hardware revision everywhere.
 
-After PCB or project-local 3D-model changes, refresh the tracked image with
-`uv run --project automation hwrelease render-docs`; validation rejects stale renders.
+2. **Complete fitted-part metadata.** In the schematic, give every non-DNP physical
+   part a footprint plus `Manufacturer`, `MPN`, and `LCSC Part #`. The release tool
+   generates the JLCPCB BOM from these authoritative KiCad properties; editing a
+   generated CSV would only hide an incomplete source design.
 
-After the JLCPCB placement preview and pushing the version tag, create a GitHub draft with
-`uv run --project automation hwrelease publish --draft --placement-reviewed`.
+3. **Mark hand-assembled parts DNP.** The default population policy is fitted. Any
+   component that JLCPCB should not place must have KiCad's DNP attribute set, even
+   if it will be installed by hand later. Non-DNP references are required to appear
+   in both the generated BOM and component-placement list (CPL).
 
-During development, `--allow-dirty` permits an explicitly marked dirty-tree build.
-Formal packages require a clean commit, zero ERC/DRC/parity findings, and a matching
-revision/version. See [the release process](docs/manufacturing/release-process.md).
+4. **Synchronize and save the design.** Save the schematic, update the PCB from the
+   schematic, refill copper zones, and save the PCB. This makes the schematic, PCB
+   footprints, routed nets, and zone fills agree before automated checks or exports.
+
+5. **Refresh the tracked README render when necessary.** After changing the PCB,
+   project settings, project-local 3D models, or render settings, run:
+
+   ```powershell
+   uv run --project automation hwrelease render-docs
+   ```
+
+   This regenerates `docs/assets/usb-pd-splitter-isometric.png` and its source-hash
+   metadata. `validate` rejects a missing, modified, or stale render.
+
+6. **Run the fast release preflight.** Run:
+
+   ```powershell
+   uv run --project automation hwrelease validate
+   ```
+
+   This checks required project files, revision/version agreement, the README render,
+   fitted-part footprints and sourcing fields, and clean-tree policy. Repeat until it
+   passes. It does not replace ERC or DRC. During unfinished local work only,
+   `--allow-dirty` bypasses the clean-tree gate; do not use it for a formal release.
+
+7. **Run the native KiCad checks as an independent review.** Open
+   `usb-pd-splitter.kicad_jobset` in KiCad's Jobsets dialog, or run:
+
+   ```powershell
+   kicad-cli jobset run --stop-on-error --file usb-pd-splitter.kicad_jobset `
+     --output "Local release staging" usb-pd-splitter.kicad_pro
+   ```
+
+   Review ERC, DRC, and the generated exports, and resolve every finding that is not
+   deliberately excluded. The formal build later runs direct JSON ERC and DRC again,
+   including schematic/PCB parity, because that is the authoritative automated gate.
+
+8. **Commit, then build from the clean commit.** Once the design and review changes
+   are complete, commit them and run:
+
+   ```powershell
+   uv run --project automation hwrelease build
+   ```
+
+   The build reruns preflight, ERC, DRC, zone refill, and schematic parity; generates
+   Gerbers/drills, BOM, CPL, drawings, schematic PDF, STEP/render files, and exchange
+   formats; checks BOM/CPL fitted-reference parity; and writes a manifest plus
+   `SHA256SUMS` under `dist/usb-pd-splitter-rev-<rev>-v<version>/`. It refuses an
+   existing release directory so a prior release cannot be silently overwritten.
+   `--allow-warnings` and `--allow-dirty` are diagnostic-only development escapes;
+   such a build cannot become a formal package.
+
+9. **Inspect the generated release.** Run:
+
+   ```powershell
+   uv run --project automation hwrelease inspect
+   ```
+
+   This summarizes the newest release's source commit, dirty state, KiCad version,
+   fitted references, and file count. Also verify `SHA256SUMS`, open the fabrication
+   and assembly drawings, and compare `assembly/jlcpcb-bom.csv` and
+   `assembly/jlcpcb-cpl.csv` with the JLCPCB Fabrication Toolkit output. Differences
+   must be resolved in KiCad metadata or release automation, not patched in `dist/`.
+
+10. **Optionally generate InteractiveHtmlBom.** Use it for internal visual review or
+    hand-assembly guidance. It is convenient documentation, but it is not an
+    authoritative fabrication or placement input.
+
+11. **Perform a draft JLCPCB upload.** Upload
+    `fabrication/jlcpcb-gerbers.zip`, `assembly/jlcpcb-bom.csv`, and
+    `assembly/jlcpcb-cpl.csv` from the release directory without placing an order.
+    Check every part match, side, centroid, pin-1/polarity indication, and rotation in
+    the placement preview. Record persistent corrections in KiCad properties and
+    rebuild; never treat a one-off upload edit as the source fix.
+
+12. **Create the formal archive.** After the placement preview is approved, run:
+
+    ```powershell
+    uv run --project automation hwrelease package
+    ```
+
+    This revalidates the clean current sources, the release manifest and source hashes,
+    zero ERC/DRC warnings or errors, BOM/CPL parity, required manufacturing assets, and
+    every entry in `SHA256SUMS`. It then creates the complete release ZIP and a separate
+    `.zip.sha256` file in `dist/`.
+
+13. **Tag and push the approved commit.** Create the version tag required by the
+    manufacturing profile and push it, for example:
+
+    ```powershell
+    git tag hardware-v1.1.0
+    git push origin hardware-v1.1.0
+    ```
+
+    The tag must resolve locally and on `origin` to the exact clean commit recorded in
+    the package. Adjust the version to match `manufacturing/profiles/jlcpcb.toml`.
+
+14. **Create and review a guarded GitHub draft.** After `gh auth login`, run:
+
+    ```powershell
+    uv run --project automation hwrelease publish --draft --placement-reviewed
+    ```
+
+    `--draft` prevents accidental public publication, and `--placement-reviewed` is an
+    explicit assertion that the human JLCPCB preview check is complete. The command
+    rechecks the package and remote tag, then uploads the archive, checksums, Gerber ZIP,
+    BOM, and CPL to a draft release. Inspect every asset before publishing the draft in
+    GitHub, or publish explicitly with
+    `gh release edit hardware-vX.Y.Z --draft=false --latest`.
+
+15. **Approve the first article, not merely the files.** Inspect and document the first
+    assembled board against `manufacturing/templates/inspection-checklist.md`. Confirm
+    assembly orientation and workmanship, then perform electrical bring-up and the
+    intended USB-C power/data tests before authorizing repeat builds.
+
+Generated `outputs/` and `dist/` files are review artifacts, not source files, and no
+command above places a JLCPCB order. See [the formal release-process checklist](docs/manufacturing/release-process.md)
+and [the manufacturing tooling rationale](docs/manufacturing/tooling-decisions.md).
 
 ## Notes
 This design is a passive power/data splitter, not a USB Power Delivery controller. It assumes:

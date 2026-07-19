@@ -30,7 +30,7 @@ class ReleaseTests(unittest.TestCase):
 
     def test_project_parts_are_fully_sourced(self):
         parts = parse_parts(ROOT / "usb-pd-splitter.kicad_sch")
-        self.assertEqual([part.reference for part in parts], ["J1", "J2", "J3", "R1", "R2"])
+        self.assertEqual([part.reference for part in parts], ["D1", "J1", "J2", "J3", "R1", "R2", "R3"])
         fitted = [part for part in parts if not part.dnp]
         self.assertTrue(all(part.fields.get("Manufacturer") for part in fitted))
         self.assertTrue(all(part.fields.get("MPN") for part in fitted))

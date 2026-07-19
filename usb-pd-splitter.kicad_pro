@@ -256,7 +256,7 @@
       "internal_id": "",
       "mfg": "",
       "mpn": "",
-      "sch_revision": ""
+      "sch_revision": "A"
     },
     "layer_pairs": [],
     "layer_presets": [],
@@ -703,7 +703,7 @@
         "uuid": "e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
       }
     ],
-    "used_designators": "#FLG1-2,R1-2,J1-3,#PWR1-10",
+    "used_designators": "#FLG1-2,R1-3,J1-3,D1,#PWR1-12",
     "variants": []
   },
   "sheets": [
@@ -714,7 +714,7 @@
   ],
   "text_variables": {
     "HW_REVISION": "A",
-    "HW_VERSION": "1.0.0"
+    "HW_VERSION": "1.1.0"
   },
   "tuning_profiles": {
     "meta": {
