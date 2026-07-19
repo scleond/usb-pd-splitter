@@ -135,11 +135,71 @@ def documentation_render_paths(root: Path, slug: str) -> tuple[Path, Path]:
     return base.with_suffix(".png"), base.with_suffix(".render.json")
 
 
-def isometric_render_command(kicad: str, pcb: Path, output: Path) -> list[str]:
+def standard_3d_model_directory(kicad: str, kicad_major: int) -> Path:
+    variable = f"KICAD{kicad_major}_3DMODEL_DIR"
+    candidates: list[Path] = []
+    configured = os.environ.get(variable)
+    if configured:
+        candidates.append(Path(configured))
+
+    executable = shutil.which(kicad)
+    if not executable and Path(kicad).is_file():
+        executable = kicad
+    if executable:
+        install_root = Path(executable).resolve().parent.parent
+        candidates.append(install_root / "share/kicad/3dmodels")
+
+    for candidate in candidates:
+        if candidate.is_dir():
+            return candidate.resolve()
+
+    checked = ", ".join(str(candidate) for candidate in candidates) or "no candidate paths"
+    raise RuntimeError(f"Unable to resolve {variable}; checked {checked}")
+
+
+def kicad_profile_directories(kicad_major: int) -> list[Path]:
+    version = f"{kicad_major}.0"
+    if os.name == "nt":
+        directories: list[Path] = []
+        if appdata := os.environ.get("APPDATA"):
+            directories.append(Path(appdata) / "kicad" / version)
+        if local_appdata := os.environ.get("LOCALAPPDATA"):
+            directories.append(Path(local_appdata) / "KiCad" / version)
+        return directories
+
+    config_home = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+    return [config_home / "kicad" / version]
+
+
+def ensure_kicad_profile_access(kicad_major: int, directories: list[Path] | None = None) -> None:
+    profile_directories = directories if directories is not None else kicad_profile_directories(kicad_major)
+    for directory in profile_directories:
+        try:
+            if not directory.exists():
+                continue
+            if not directory.is_dir():
+                raise RuntimeError(f"KiCad profile path is not a directory: {directory}")
+            next(directory.iterdir(), None)
+        except OSError as error:
+            raise RuntimeError(
+                f"KiCad profile is not readable: {directory}. "
+                "Run the render with normal user-profile access; restricted renders can silently omit 3D models."
+            ) from error
+
+
+def isometric_render_command(
+    kicad: str,
+    pcb: Path,
+    output: Path,
+    model_directory: Path,
+    kicad_major: int,
+) -> list[str]:
     return [
         kicad,
         "pcb",
         "render",
+        "--define-var",
+        f"KICAD{kicad_major}_3DMODEL_DIR={model_directory}",
         "--output",
         str(output),
         *ISOMETRIC_RENDER_SETTINGS,
@@ -189,8 +249,15 @@ def documentation_render_errors(root: Path, profile: dict, pro: Path, pcb: Path)
 
 
 def render_isometric(root: Path, pcb: Path, output: Path, kicad: str, required: bool = True) -> None:
+    kicad_major = load_profile(root)["project"]["kicad_major"]
+    ensure_kicad_profile_access(kicad_major)
     output.parent.mkdir(parents=True, exist_ok=True)
-    run(isometric_render_command(kicad, pcb, output), root, required=required)
+    model_directory = standard_3d_model_directory(kicad, kicad_major)
+    run(
+        isometric_render_command(kicad, pcb, output, model_directory, kicad_major),
+        root,
+        required=required,
+    )
     if required and not output.exists():
         raise RuntimeError(f"KiCad did not create the requested render: {output}")
 

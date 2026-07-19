@@ -1006,7 +1006,7 @@
 			(uuid "7778f55f-3f34-4a5c-8357-2e112204f24d")
 		)
 		(embedded_fonts no)
-		(model "C:/!libs/kicad/3dmodels/cl_Connector_USB.3dshapes/USB4110-GF-A.stp"
+		(model "${KIPRJMOD}/hardware/3d_models/USB4110-GF-A.stp"
 			(offset
 				(xyz 0 -3.5 0)
 			)
@@ -1884,7 +1884,7 @@
 			(uuid "5b0cd8ea-496e-43a4-abd4-ca84d7b5e0be")
 		)
 		(embedded_fonts no)
-		(model "C:/!libs/kicad/3dmodels/cl_Connector_USB.3dshapes/USB4110-GF-A.stp"
+		(model "${KIPRJMOD}/hardware/3d_models/USB4110-GF-A.stp"
 			(offset
 				(xyz 0 -3.5 0)
 			)
@@ -2556,7 +2556,7 @@
 			(uuid "9dfd4b0a-4e65-4a6e-b630-63cb3b822a9c")
 		)
 		(embedded_fonts no)
-		(model "C:/!libs/kicad/3dmodels/cl_Connector_USB.3dshapes/USB4110-GF-A.stp"
+		(model "${KIPRJMOD}/hardware/3d_models/USB4110-GF-A.stp"
 			(offset
 				(xyz 0 -3.5 0)
 			)

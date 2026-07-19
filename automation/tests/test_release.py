@@ -1,5 +1,6 @@
 import csv
 import json
+import re
 import tempfile
 import unittest
 import zipfile
@@ -10,11 +11,13 @@ from hwrelease.cli import (
     create_release_archive,
     documentation_render_errors,
     documentation_render_paths,
+    ensure_kicad_profile_access,
     expected_render_metadata,
     github_release_command,
     isometric_render_command,
     release_identity,
     sha256,
+    standard_3d_model_directory,
     convert_cpl,
     natural_key,
     parse_parts,
@@ -48,12 +51,47 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(row, {"Designator": "J1", "Mid X": "10", "Mid Y": "-20", "Rotation": "270", "Layer": "Top"})
 
     def test_isometric_render_command_is_fixed_and_raytraced(self):
-        command = isometric_render_command("kicad-cli", Path("board.kicad_pcb"), Path("image.png"))
-        self.assertEqual(command[:5], ["kicad-cli", "pcb", "render", "--output", "image.png"])
+        command = isometric_render_command(
+            "kicad-cli",
+            Path("board.kicad_pcb"),
+            Path("image.png"),
+            Path("models"),
+            10,
+        )
+        self.assertEqual(command[:3], ["kicad-cli", "pcb", "render"])
+        self.assertEqual(command[3:5], ["--define-var", "KICAD10_3DMODEL_DIR=models"])
+        self.assertEqual(command[5:7], ["--output", "image.png"])
         self.assertIn("high", command)
         self.assertIn("--floor", command)
         self.assertIn("--perspective", command)
         self.assertEqual(command[command.index("--rotate") + 1], "-45,0,45")
+
+    def test_standard_3d_model_directory_follows_kicad_install(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            executable = root / "bin" / "kicad-cli"
+            models = root / "share" / "kicad" / "3dmodels"
+            executable.parent.mkdir(parents=True)
+            executable.touch()
+            models.mkdir(parents=True)
+            self.assertEqual(standard_3d_model_directory(str(executable), 10), models.resolve())
+
+    def test_render_rejects_an_invalid_kicad_profile_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            profile = Path(directory) / "10.0"
+            profile.write_text("not a directory", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "not a directory"):
+                ensure_kicad_profile_access(10, [profile])
+
+    def test_project_3d_models_are_portable_and_present(self):
+        pcb = (ROOT / "usb-pd-splitter.kicad_pcb").read_text(encoding="utf-8")
+        models = re.findall(r'\(model "([^"]+)"', pcb)
+        self.assertEqual(len(models), 7)
+        self.assertFalse(any(re.match(r"^[A-Za-z]:/", model) for model in models))
+        project_models = [model for model in models if model.startswith("${KIPRJMOD}/")]
+        self.assertEqual(len(project_models), 3)
+        for model in project_models:
+            self.assertTrue((ROOT / model.removeprefix("${KIPRJMOD}/")).is_file())
 
     def test_documentation_render_path_and_freshness(self):
         with tempfile.TemporaryDirectory() as directory:

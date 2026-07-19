@@ -22,7 +22,8 @@
   ],
   "sources": {
     "usb-pd-splitter.kicad_pro": "d34aeb79cf6c29daccbac3153ad76ca064620308838473b24e59359a9205c15f",
-    "usb-pd-splitter.kicad_pcb": "94f3ce5e270391a73e01b5bb243ba14035f3571fe932fd77162c6b5fa5636415"
+    "usb-pd-splitter.kicad_pcb": "9f702899021200d0ed4189199377eb65cc57061787d6553b542b45f5e63b5cd8",
+    "hardware/3d_models/USB4110-GF-A.stp": "c5bf36516038c2327d998c0fea81539bcc141eaa732faf9ff21d88546c9b89a8"
   },
-  "image_sha256": "15b60582a3b91862cb09d8b90294fd02ba64eb86e9ca00c6f618d9559fa8b6ac"
+  "image_sha256": "4b101fc7daf74ab598643a5363eab555bc17268be51480c6185db0d3c9849c5b"
 }
